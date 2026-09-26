@@ -2006,6 +2006,21 @@ public class BinaryStream {
         return (int) value;
     }
 
+    /**
+     * Reads a collection count whose elements each consume at least one wire byte.
+     * Check the remaining payload before narrowing or allocating; unlike a fixed
+     * policy limit, this accepts every collection that can fit in the packet.
+     */
+    protected int getUnsignedVarIntCount(String fieldName) {
+        long value = this.getUnsignedVarInt();
+        long remaining = this.buffer == null ? 0
+                : Math.max(0L, Math.min(this.count, this.buffer.length) - (long) this.offset);
+        if (value > remaining) {
+            throw new IllegalArgumentException(fieldName + " exceeds remaining payload: " + value);
+        }
+        return (int) value;
+    }
+
     public void putUnsignedVarInt(long v) {
         VarInt.writeUnsignedVarInt(this, v);
     }

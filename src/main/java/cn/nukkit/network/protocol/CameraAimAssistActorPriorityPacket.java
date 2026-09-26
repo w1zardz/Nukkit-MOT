@@ -14,7 +14,6 @@ import java.util.List;
 public class CameraAimAssistActorPriorityPacket extends DataPacket {
 
     public static final int NETWORK_ID = ProtocolInfo.CAMERA_AIM_ASSIST_ACTOR_PRIORITY_PACKET;
-    private static final int MAX_PRIORITIES = 4096;
 
     public List<AimAssistActorPriorityData> priorities = new ArrayList<>();
 
@@ -31,7 +30,7 @@ public class CameraAimAssistActorPriorityPacket extends DataPacket {
 
     @Override
     public void decode() {
-        int count = this.getUnsignedVarInt(MAX_PRIORITIES, "camera aim-assist priority count");
+        int count = this.getUnsignedVarIntCount("camera actor priority count");
         this.priorities = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             int presetIndex = this.getLInt();
