@@ -1994,6 +1994,15 @@ public class BinaryStream {
         return VarInt.readUnsignedVarInt(this);
     }
 
+    /** Reads an untrusted collection length without narrowing it before validation. */
+    public int getUnsignedVarInt(int maxValue, String fieldName) {
+        long value = this.getUnsignedVarInt();
+        if (value > maxValue) {
+            throw new IllegalArgumentException(fieldName + " exceeds maximum " + maxValue + ": " + value);
+        }
+        return (int) value;
+    }
+
     public void putUnsignedVarInt(long v) {
         VarInt.writeUnsignedVarInt(this, v);
     }

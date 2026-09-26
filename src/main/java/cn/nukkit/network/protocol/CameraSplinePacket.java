@@ -19,6 +19,9 @@ public class CameraSplinePacket extends DataPacket {
 
     public static final int NETWORK_ID = ProtocolInfo.CAMERA_SPLINE_PACKET;
 
+    private static final int MAX_SPLINES = 1024;
+    private static final int MAX_SPLINE_ITEMS = 4096;
+
     public List<CameraSplineDefinition> splines = new ArrayList<>();
 
     @Override
@@ -34,7 +37,7 @@ public class CameraSplinePacket extends DataPacket {
 
     @Override
     public void decode() {
-        int splineCount = (int) this.getUnsignedVarInt();
+        int splineCount = this.getUnsignedVarInt(MAX_SPLINES, "camera spline count");
         this.splines = new ArrayList<>(splineCount);
 
         for (int i = 0; i < splineCount; i++) {
@@ -43,14 +46,14 @@ public class CameraSplinePacket extends DataPacket {
             CameraSplineType type = CameraSplineType.fromName(this.getString());
 
             // Read curve points
-            int curveCount = (int) this.getUnsignedVarInt();
+            int curveCount = this.getUnsignedVarInt(MAX_SPLINE_ITEMS, "camera spline control point count");
             List<Vector3f> curve = new ArrayList<>(curveCount);
             for (int j = 0; j < curveCount; j++) {
                 curve.add(this.getVector3f());
             }
 
             // Read progress key frames
-            int progressCount = (int) this.getUnsignedVarInt();
+            int progressCount = this.getUnsignedVarInt(MAX_SPLINE_ITEMS, "camera spline progress key frame count");
             List<CameraSplineInstruction.SplineProgressOption> progressKeyFrames = new ArrayList<>(progressCount);
             for (int j = 0; j < progressCount; j++) {
                 float value = this.getLFloat();
@@ -60,7 +63,7 @@ public class CameraSplinePacket extends DataPacket {
             }
 
             // Read rotation options
-            int rotationCount = (int) this.getUnsignedVarInt();
+            int rotationCount = this.getUnsignedVarInt(MAX_SPLINE_ITEMS, "camera spline rotation key frame count");
             List<CameraSplineInstruction.SplineRotationOption> rotationOptions = new ArrayList<>(rotationCount);
             for (int j = 0; j < rotationCount; j++) {
                 Vector3f keyFrameValues = this.getVector3f();
