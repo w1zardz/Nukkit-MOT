@@ -6055,6 +6055,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
      * The sort is stable, so actions of the same group keep the order they already had.
      */
     static List<PlayerBlockActionData> orderBlockActions(Collection<PlayerBlockActionData> actions) {
+        if (actions.isEmpty()) {
+            return List.of();
+        }
         List<PlayerBlockActionData> ordered = new ArrayList<>(actions);
         if (ordered.size() > 1) {
             ordered.sort(Comparator.comparingInt(action -> endsBlockDestruction(action.getAction()) ? 0 : 1));
