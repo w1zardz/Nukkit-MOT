@@ -26,6 +26,7 @@ import java.util.UUID;
 public class SyncSkinPacket extends DataPacket {
 
     public static final int NETWORK_ID = ProtocolInfo.PACKET_SYNC_SKIN;
+    private static final int MAX_ENTRIES = 1024;
 
     public List<SyncSkinEntry> entries = new ObjectArrayList<>();
 
@@ -67,7 +68,7 @@ public class SyncSkinPacket extends DataPacket {
 
     @Override
     public void decode() {
-        int count = (int) this.getUnsignedVarInt();
+        int count = this.getUnsignedVarInt(MAX_ENTRIES, "NetEase skin entry count");
         this.entries = new ObjectArrayList<>(count);
         for (int i = 0; i < count; i++) {
             this.entries.add(new SyncSkinEntry());

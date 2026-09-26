@@ -1,6 +1,7 @@
 package cn.nukkit.network.protocol;
 
 import org.junit.jupiter.api.Test;
+import cn.nukkit.network.protocol.netease.SyncSkinPacket;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -23,6 +24,14 @@ class ClientDecodeAllocationLimitTest {
     @Test
     void voxelShapesRejectsOversizedTopLevelCountBeforeAllocating() {
         VoxelShapesPacket packet = new VoxelShapesPacket();
+        packet.setBuffer(TWO_GIB_ITEM_COUNT);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void netEaseSkinRejectsOversizedEntryCountBeforeAllocating() {
+        SyncSkinPacket packet = new SyncSkinPacket();
         packet.setBuffer(TWO_GIB_ITEM_COUNT);
 
         assertThrows(IllegalArgumentException.class, packet::decode);
