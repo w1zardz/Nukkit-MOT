@@ -53,7 +53,8 @@ public class EntityItem extends Entity {
      * sides are checked: a mergeable neighbour can neither absorb nor be absorbed by an entity
      * that opted out.
      */
-    protected boolean mergeItems = true;
+    // initEntity runs from the super constructor; do not overwrite its NBT or spawn-listener decision.
+    protected boolean mergeItems;
 
     public EntityItem(FullChunk chunk, CompoundTag nbt) {
         super(chunk, nbt);
