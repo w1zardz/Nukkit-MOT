@@ -1,5 +1,7 @@
 package cn.nukkit.network.protocol;
 
+import cn.nukkit.GameVersion;
+import cn.nukkit.utils.BinaryStream;
 import org.junit.jupiter.api.Test;
 import cn.nukkit.network.protocol.netease.SyncSkinPacket;
 
@@ -33,6 +35,20 @@ class ClientDecodeAllocationLimitTest {
     void netEaseSkinRejectsOversizedEntryCountBeforeAllocating() {
         SyncSkinPacket packet = new SyncSkinPacket();
         packet.setBuffer(TWO_GIB_ITEM_COUNT);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void mapInfoRejectsMorePixelsThanOneVanillaMap() {
+        BinaryStream stream = new BinaryStream();
+        stream.putVarLong(0);
+        stream.putLInt(128 * 128 + 1);
+
+        MapInfoRequestPacket packet = new MapInfoRequestPacket();
+        packet.protocol = ProtocolInfo.v1_19_20;
+        packet.gameVersion = GameVersion.byProtocol(packet.protocol, false);
+        packet.setBuffer(stream.getBuffer());
 
         assertThrows(IllegalArgumentException.class, packet::decode);
     }
