@@ -19,4 +19,12 @@ class ClientDecodeAllocationLimitTest {
 
         assertThrows(IllegalArgumentException.class, packet::decode);
     }
+
+    @Test
+    void voxelShapesRejectsOversizedTopLevelCountBeforeAllocating() {
+        VoxelShapesPacket packet = new VoxelShapesPacket();
+        packet.setBuffer(TWO_GIB_ITEM_COUNT);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
 }

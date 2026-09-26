@@ -28,6 +28,11 @@ public class VoxelShapesPacket extends DataPacket {
 
     public static final int NETWORK_ID = ProtocolInfo.VOXEL_SHAPES_PACKET;
 
+    private static final int MAX_SHAPES = 4096;
+    private static final int MAX_STORAGE_ENTRIES = 4096;
+    private static final int MAX_AXIS_COORDINATES = 256;
+    private static final int MAX_NAME_MAP_ENTRIES = 4096;
+
     private static final BatchPacket CACHED_PACKET_VANILLA;
     private static final BatchPacket CACHED_PACKET_EMPTY;
 
@@ -99,7 +104,7 @@ public class VoxelShapesPacket extends DataPacket {
 
     @Override
     public void decode() {
-        int shapeCount = (int) this.getUnsignedVarInt();
+        int shapeCount = this.getUnsignedVarInt(MAX_SHAPES, "voxel shape count");
         this.shapes = new ArrayList<>(shapeCount);
 
         for (int i = 0; i < shapeCount; i++) {
@@ -111,7 +116,7 @@ public class VoxelShapesPacket extends DataPacket {
             short zSize = (short) this.getByte();
 
             // Read storage array
-            int storageCount = (int) this.getUnsignedVarInt();
+            int storageCount = this.getUnsignedVarInt(MAX_STORAGE_ENTRIES, "voxel shape storage count");
             List<Short> storage = new ArrayList<>(storageCount);
             for (int k = 0; k < storageCount; k++) {
                 storage.add((short) this.getByte());
@@ -120,7 +125,7 @@ public class VoxelShapesPacket extends DataPacket {
             shape.setCells(new SerializableVoxelShape.SerializableCells(xSize, ySize, zSize, storage));
 
             // Read X coordinates
-            int xCount = (int) this.getUnsignedVarInt();
+            int xCount = this.getUnsignedVarInt(MAX_AXIS_COORDINATES, "voxel shape X coordinate count");
             List<Float> xCoordinates = new ArrayList<>(xCount);
             for (int j = 0; j < xCount; j++) {
                 xCoordinates.add(this.getLFloat());
@@ -128,7 +133,7 @@ public class VoxelShapesPacket extends DataPacket {
             shape.setXCoordinates(xCoordinates);
 
             // Read Y coordinates
-            int yCount = (int) this.getUnsignedVarInt();
+            int yCount = this.getUnsignedVarInt(MAX_AXIS_COORDINATES, "voxel shape Y coordinate count");
             List<Float> yCoordinates = new ArrayList<>(yCount);
             for (int j = 0; j < yCount; j++) {
                 yCoordinates.add(this.getLFloat());
@@ -136,7 +141,7 @@ public class VoxelShapesPacket extends DataPacket {
             shape.setYCoordinates(yCoordinates);
 
             // Read Z coordinates
-            int zCount = (int) this.getUnsignedVarInt();
+            int zCount = this.getUnsignedVarInt(MAX_AXIS_COORDINATES, "voxel shape Z coordinate count");
             List<Float> zCoordinates = new ArrayList<>(zCount);
             for (int j = 0; j < zCount; j++) {
                 zCoordinates.add(this.getLFloat());
@@ -147,7 +152,7 @@ public class VoxelShapesPacket extends DataPacket {
         }
 
         // Read name map
-        int mapCount = (int) this.getUnsignedVarInt();
+        int mapCount = this.getUnsignedVarInt(MAX_NAME_MAP_ENTRIES, "voxel shape name map count");
         this.nameMap = new LinkedHashMap<>(mapCount);
         for (int i = 0; i < mapCount; i++) {
             String name = this.getString();
