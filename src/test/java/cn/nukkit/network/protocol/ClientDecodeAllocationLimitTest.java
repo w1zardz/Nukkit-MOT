@@ -40,6 +40,22 @@ class ClientDecodeAllocationLimitTest {
     }
 
     @Test
+    void bookEditRejectsOversizedPageBeforeBuildingString() {
+        BinaryStream stream = new BinaryStream();
+        stream.putVarInt(0);
+        stream.putUnsignedVarInt(BookEditPacket.Action.ADD_PAGE.ordinal());
+        stream.putVarInt(0);
+        stream.putString("x".repeat(257));
+
+        BookEditPacket packet = new BookEditPacket();
+        packet.protocol = ProtocolInfo.v1_26_0;
+        packet.gameVersion = GameVersion.byProtocol(packet.protocol, false);
+        packet.setBuffer(stream.getBuffer());
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
     void legacySubChunkRequestRejectsTooManyOffsetsBeforeBuildingObjects() {
         BinaryStream stream = new BinaryStream();
         stream.putVarInt(0);
