@@ -1,6 +1,7 @@
 package cn.nukkit.network.protocol;
 
 import cn.nukkit.GameVersion;
+import cn.nukkit.math.BlockVector3;
 import cn.nukkit.utils.BinaryStream;
 import org.junit.jupiter.api.Test;
 import cn.nukkit.network.protocol.netease.SyncSkinPacket;
@@ -52,6 +53,81 @@ class ClientDecodeAllocationLimitTest {
         packet.setBuffer(stream.getBuffer());
 
         assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void itemStackRequestRejectsTooManyRequestsBeforeBuildingObjects() {
+        BinaryStream stream = new BinaryStream();
+        stream.putUnsignedVarInt(129);
+
+        ItemStackRequestPacket packet = itemStackRequestPacket(stream);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void itemStackRequestRejectsTooManyActionsBeforeBuildingObjects() {
+        BinaryStream stream = new BinaryStream();
+        stream.putUnsignedVarInt(1);
+        stream.putVarInt(0);
+        stream.putUnsignedVarInt(129);
+
+        ItemStackRequestPacket packet = itemStackRequestPacket(stream);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void itemStackRequestRejectsTooManyFilteredStringsBeforeBuildingStrings() {
+        BinaryStream stream = new BinaryStream();
+        stream.putUnsignedVarInt(1);
+        stream.putVarInt(0);
+        stream.putUnsignedVarInt(0);
+        stream.putUnsignedVarInt(129);
+
+        ItemStackRequestPacket packet = itemStackRequestPacket(stream);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void itemStackRequestRejectsTooManyRecipeIngredientsBeforeBuildingObjects() {
+        BinaryStream stream = new BinaryStream();
+        stream.putUnsignedVarInt(1);
+        stream.putVarInt(0);
+        stream.putUnsignedVarInt(1);
+        stream.putUnsignedVarInt(11); // v1.26.40+ compact CRAFT_RECIPE_AUTO action id
+        stream.putByte((byte) 11); // duplicate type byte
+        stream.putUnsignedVarInt(0); // recipe id
+        stream.putByte((byte) 1); // requested crafts
+        stream.putUnsignedVarInt(129);
+
+        ItemStackRequestPacket packet = itemStackRequestPacket(stream);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void itemStackRequestRejectsTooManyCraftResultsBeforeBuildingObjects() {
+        BinaryStream stream = new BinaryStream();
+        stream.putUnsignedVarInt(1);
+        stream.putVarInt(0);
+        stream.putUnsignedVarInt(1);
+        stream.putUnsignedVarInt(17); // v1.26.40+ compact CRAFT_RESULTS action id
+        stream.putByte((byte) 17); // duplicate type byte
+        stream.putUnsignedVarInt(129);
+
+        ItemStackRequestPacket packet = itemStackRequestPacket(stream);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    private static ItemStackRequestPacket itemStackRequestPacket(BinaryStream stream) {
+        ItemStackRequestPacket packet = new ItemStackRequestPacket();
+        packet.protocol = ProtocolInfo.v1_26_50;
+        packet.gameVersion = GameVersion.byProtocol(packet.protocol, false);
+        packet.setBuffer(stream.getBuffer());
+        return packet;
     }
 
     @Test

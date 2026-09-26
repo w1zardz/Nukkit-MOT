@@ -64,6 +64,9 @@ public class BinaryStream {
     protected int count;
 
     private static final int MAX_ARRAY_SIZE = 2147483639;
+    private static final int MAX_ITEM_STACK_REQUEST_ACTIONS = 128;
+    private static final int MAX_ITEM_STACK_REQUEST_FILTER_STRINGS = 128;
+    private static final int MAX_ITEM_STACK_REQUEST_CRAFT_ITEMS = 128;
 
     public BinaryStream() {
         this.buffer = new byte[32];
@@ -2229,6 +2232,16 @@ public class BinaryStream {
         return deque.toArray((T[]) Array.newInstance(clazz, 0));
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T[] getArray(Class<T> clazz, Function<BinaryStream, T> function, int maxLength, String fieldName) {
+        ArrayDeque<T> deque = new ArrayDeque<>();
+        int count = this.getUnsignedVarInt(maxLength, fieldName);
+        for (int i = 0; i < count; i++) {
+            deque.add(function.apply(this));
+        }
+        return deque.toArray((T[]) Array.newInstance(clazz, 0));
+    }
+
     public <T> void getArray(Collection<T> array, Function<BinaryStream, T> function) {
         getArray(array, BinaryStream::getUnsignedVarInt, function);
     }
@@ -2424,9 +2437,10 @@ public class BinaryStream {
                 s.getByte(); // 重复类型字节，丢弃 / duplicate type byte, discarded
             }
             return readRequestActionData(gameVersion, itemStackRequestActionType);
-        });
+        }, MAX_ITEM_STACK_REQUEST_ACTIONS, "item stack request action count");
         String[] filteredStrings = protocol >= ProtocolInfo.v1_16_200
-                ? getArray(String.class, BinaryStream::getString)
+                ? getArray(String.class, BinaryStream::getString, MAX_ITEM_STACK_REQUEST_FILTER_STRINGS,
+                "item stack request filtered string count")
                 : new String[0];
 
         if (protocol >= ProtocolInfo.v1_19_30) {
@@ -2463,7 +2477,13 @@ public class BinaryStream {
                 List<ItemDescriptorWithCount> ingredients = new ArrayList<>();
                 if (protocol >= ProtocolInfo.v1_19_40) {
                     // v2168: ingredients 数组 count 改用 VarUInt / ingredients array count uses VarUInt
-                    int size = protocol >= ProtocolInfo.v1_26_40 ? (int) getUnsignedVarInt() : getByte() & 0xFF;
+                    int size = protocol >= ProtocolInfo.v1_26_40
+                            ? getUnsignedVarInt(MAX_ITEM_STACK_REQUEST_CRAFT_ITEMS, "item stack recipe ingredient count")
+                            : getByte() & 0xFF;
+                    if (size > MAX_ITEM_STACK_REQUEST_CRAFT_ITEMS) {
+                        throw new IllegalArgumentException("Item stack recipe ingredient count exceeds maximum "
+                                + MAX_ITEM_STACK_REQUEST_CRAFT_ITEMS + ": " + size);
+                    }
                     for (int i = 0; i < size; i++) {
                         ingredients.add(readIngredientDescriptor(gameVersion));
                     }
@@ -2480,7 +2500,7 @@ public class BinaryStream {
                             return this.getSlotNew(gameVersion, true);
                         }
                         return this.getSlot(gameVersion);
-                    }),
+                    }, MAX_ITEM_STACK_REQUEST_CRAFT_ITEMS, "item stack craft result count"),
                     getByte() & 0xFF
             );
             // v2168: stackNetworkId 改为 LInt / stackNetworkId changed to LInt
