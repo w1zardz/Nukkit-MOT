@@ -8,6 +8,7 @@ import cn.nukkit.entity.Entity;
 import cn.nukkit.entity.mob.EntitySnowGolem;
 import cn.nukkit.entity.mob.EntityZombie;
 import cn.nukkit.entity.passive.EntityPig;
+import cn.nukkit.entity.passive.EntitySheep;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.LevelProvider;
 import cn.nukkit.math.Vector3;
@@ -187,6 +188,23 @@ class EntityActivationTest {
         EntityPig dead = spawn(EntityPig::new, 200, 0);
         dead.setHealth(0);
         assertEquals(40, runs(dead, 1000, 40));
+    }
+
+    @Test
+    void shearedSheepWakeUntilTheirWoolHasRegrown() {
+        playerAt(0, 0);
+        EntitySheep sheep = spawn(EntitySheep::new, 200, 0);
+        runs(sheep, 1000, 40);
+        assertTrue(sheep.isActivationAsleep());
+
+        sheep.shear(true);
+        assertEquals(60, runs(sheep, 1040, 60), "wool regrowth decrements once per update");
+        assertFalse(sheep.isActivationAsleep());
+
+        sheep.shear(false);
+        runs(sheep, 1100, 20);
+        assertTrue(sheep.isActivationAsleep());
+        assertEquals(3, runs(sheep, 1120, 60), "regrown sheep may sleep again");
     }
 
     @Test
