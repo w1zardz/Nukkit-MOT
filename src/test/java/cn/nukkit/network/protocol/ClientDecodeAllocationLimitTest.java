@@ -40,6 +40,35 @@ class ClientDecodeAllocationLimitTest {
     }
 
     @Test
+    void legacySubChunkRequestRejectsTooManyOffsetsBeforeBuildingObjects() {
+        BinaryStream stream = new BinaryStream();
+        stream.putVarInt(0);
+        stream.putSignedBlockPosition(new BlockVector3(0, 0, 0));
+        stream.putLInt(8193);
+
+        SubChunkRequestPacket packet = new SubChunkRequestPacket();
+        packet.protocol = ProtocolInfo.v1_20_0;
+        packet.gameVersion = GameVersion.byProtocol(packet.protocol, false);
+        packet.setBuffer(stream.getBuffer());
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void modernSubChunkRequestRejectsUnsignedOverflowBeforeBuildingObjects() {
+        BinaryStream stream = new BinaryStream();
+        stream.putVarInt(0);
+        stream.putUnsignedVarInt(0xFFFFFFFFL);
+
+        SubChunkRequestPacket packet = new SubChunkRequestPacket();
+        packet.protocol = ProtocolInfo.v1_26_30;
+        packet.gameVersion = GameVersion.byProtocol(packet.protocol, false);
+        packet.setBuffer(stream.getBuffer());
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
     void mapInfoRejectsMorePixelsThanOneVanillaMap() {
         BinaryStream stream = new BinaryStream();
         stream.putVarLong(0);
