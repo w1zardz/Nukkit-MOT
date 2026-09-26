@@ -32,6 +32,29 @@ class ClientDecodeAllocationLimitTest {
     }
 
     @Test
+    void cameraAimAssistRejectsOversizedPriorityCountBeforeAllocating() {
+        CameraAimAssistActorPriorityPacket packet = new CameraAimAssistActorPriorityPacket();
+        packet.setBuffer(TWO_GIB_ITEM_COUNT);
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
+    void textureShiftRejectsOversizedStepCountBeforeAllocating() {
+        BinaryStream stream = new BinaryStream();
+        stream.putByte((byte) 0);
+        stream.putString("");
+        stream.putString("");
+        stream.putString("");
+        stream.put(TWO_GIB_ITEM_COUNT);
+
+        ClientboundTextureShiftPacket packet = new ClientboundTextureShiftPacket();
+        packet.setBuffer(stream.getBuffer());
+
+        assertThrows(IllegalArgumentException.class, packet::decode);
+    }
+
+    @Test
     void netEaseSkinRejectsOversizedEntryCountBeforeAllocating() {
         SyncSkinPacket packet = new SyncSkinPacket();
         packet.setBuffer(TWO_GIB_ITEM_COUNT);

@@ -10,6 +10,7 @@ import lombok.ToString;
 public class ClientboundTextureShiftPacket extends DataPacket {
 
     public static final int NETWORK_ID = ProtocolInfo.CLIENTBOUND_TEXTURE_SHIFT_PACKET;
+    private static final int MAX_TEXTURE_STEPS = 4096;
 
     public static final int ACTION_INVALID = 0;
     public static final int ACTION_INITIALIZE = 1;
@@ -43,7 +44,7 @@ public class ClientboundTextureShiftPacket extends DataPacket {
         this.collectionName = this.getString();
         this.fromStep = this.getString();
         this.toStep = this.getString();
-        int count = (int) this.getUnsignedVarInt();
+        int count = this.getUnsignedVarInt(MAX_TEXTURE_STEPS, "texture shift step count");
         this.allSteps = new String[count];
         for (int i = 0; i < count; i++) {
             this.allSteps[i] = this.getString();
