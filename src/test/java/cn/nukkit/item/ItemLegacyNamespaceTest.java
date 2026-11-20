@@ -6,6 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import cn.nukkit.network.protocol.ProtocolInfo;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Legacy ItemID names retain meaning when the explicit vanilla namespace is used. */
@@ -47,6 +49,18 @@ class ItemLegacyNamespaceTest {
             "minecraft:missing_legacy_item", "missing_legacy_item", "minecraft:minecraft:totem"})
     void unsupportedNamesKeepExistingRefusal(String name) {
         assertEquals(Item.AIR, Item.fromString(name).getId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"minecraft:pale_oak_door", "minecraft:totem", "minecraft:appleenchanted",
+            "minecraft:clownfish", "minecraft:cooked_fish", "minecraft:stone", "minecraft:oak_log"})
+    void explicitVanillaNamesNeverProduceUnmappedItems(String name) {
+        Item item = Item.fromString(name);
+        if (item.getId() == Item.AIR) return;
+        assertTrue(RuntimeItems.getMapping(ProtocolInfo.CURRENT_PROTOCOL).isRegistered(item.getId(), item.getDamage()),
+                name + " resolved to unmapped id " + item.getId());
+        assertDoesNotThrow(() -> RuntimeItems.getMapping(ProtocolInfo.CURRENT_PROTOCOL).getNetworkId(item), name);
+        assertDoesNotThrow(() -> { item.getNamespaceId(); }, name);
     }
 
     @ParameterizedTest
